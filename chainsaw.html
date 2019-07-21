@@ -41,8 +41,8 @@
                 ];
                 // console.log(phases);
                 function getPoint(perc) {
-                    let asd = 0.01;
-                    if (perc > 1) perc -= 1;
+                    // let asd = 0.01;
+                    // if (perc > 1) perc -= 1;
                     // if (perc < asd) perc = asd;
                     let currentPhase = 0;
                     let pfrom, pto, pperc;
@@ -94,11 +94,13 @@
                 
                 let inc = spikeWidth / area * 100;
                 let p1 = getPoint(inc);
-                for(let i = shift ? spikeWidth*.4 : spikeWidth*0.8; i < 100 + spikeWidth; i += inc) {
+                let iStart = spikeWidth * (shift ? 0.4 : 0.8);
+                for(let i = iStart; i < 100 + spikeWidth; i += inc) {
                     const p2 = getPoint(fixPercentage(i / 100));
                     if (p1 && p2) {
                         // drawLine(p1, p2);
                         // if (closeToZero(p1.y) || closeToZero(p2.y)) console.log(`DAMN ${i}`);
+                        // drawSpike(p1, p2);
                         drawSpike(p1, p2);
                     }
                     p1 = p2;
