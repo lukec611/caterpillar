@@ -55,6 +55,8 @@ class Point {
     }
 
     static interpolate(a, b, percentage) {
+        if (percentage <= 0) return a;
+        if (percentage >= 1) return b;
         const vector = b.copy().sub(a);
         vector.scale(percentage);
         vector.add(a);
