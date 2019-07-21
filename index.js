@@ -20,6 +20,9 @@ class EvilBox {
         this._e.style.height = `${this.height}px`;
         gameDiv.appendChild(this._e);
         this.setPos(this.p);
+        this.cs = new ChainSaw(0, 0, this.width, this.height);
+        this._e.appendChild(this.cs._e);
+        this.sqWave = 0;
     }
 
     setPos(p) {
@@ -29,6 +32,8 @@ class EvilBox {
 
     step(amount = 1) {
         this.setPos(this.p.sub(new Point(0, -amount)));
+        this.cs.draw(this.sqWave < 5);
+        this.sqWave = (this.sqWave + 1) % 10;
     }
 
     offScreen() {
