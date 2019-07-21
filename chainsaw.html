@@ -1,0 +1,123 @@
+<html>
+    <head></head>
+    <body>
+
+        <div style="height:100px;width:100px;background-color:green;border-radius:32px;">
+        </div>
+        <div style="height:32px;width:32px;background-color:red">
+        </div>
+
+        <div id="chainsaw-holder">
+            <canvas width="500" height="500" id="canvas" />
+        </div>
+
+
+        <script src="lib.js"></script>
+        <script>
+
+            const c = document.getElementById('canvas');
+            const ctx = c.getContext('2d');
+
+            function clear() {
+                ctx.beginPath();
+                ctx.rect(0, 0, 500, 500);
+                ctx.fillStyle = "white";
+                ctx.fill();
+            }
+
+            function fixPercentage(p) {
+                if (p < 1) return p;
+                if (p < 0) return 1 + p;
+                return p - 1;
+            }
+            
+            function drawChainsaw(x, y, w, h, spikeHeight, spikeWidth, shift) {
+
+                const area = w * 2 + h * 2;
+                let phases = [w / area, (w + h) / area, (w*2 + h) / area, 1];
+                // console.log(phases);
+                function getPoint(perc) {
+                    let currentPhase = 0;
+                    let pfrom, pto, pperc;
+                    if (perc < phases[0]) {
+                        pfrom = new Point(x, y);
+                        pto = new Point(x + w, y);
+                        pperc = perc / phases[0];
+                    } else if (perc < phases[1]) {
+                        pfrom = new Point(x + w, y);
+                        pto = new Point(x + w, y + h);
+                        pperc = (perc - phases[0]) / (phases[1] - phases[0]);
+                    } else if (perc < phases[2]) {
+                        pfrom = new Point(x + w, y + h);
+                        pto = new Point(x, y + h);
+                        pperc = (perc - phases[1]) / (phases[2] - phases[1]);
+                    } else {
+                        pfrom = new Point(x, y + h);
+                        pto = new Point(x, y);
+                        if (perc >= 1) {
+                            pperc = 1;
+                            pfrom = new Point(x, y);
+                        } else pperc = (perc - phases[2]) / (phases[3] - phases[2]);
+                        // return;
+                    }
+                    const ultimateP = Point.interpolate(pfrom, pto, fixPercentage(pperc));
+                    return ultimateP;
+                }
+
+                function drawLine(p1, p2) {
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+
+                function drawSpike(p1, p2) {
+                    const vec = p2.copy().sub(p1);
+                    const halfWay = vec.copy().scale(0.5).add(p1);
+                    let spikeBase = p1; // halfWay
+                    vec.toUnit().toNormal().scale(spikeHeight).add(spikeBase);
+                    drawLine(p1, vec);
+                    drawLine(vec, p2);
+                    if (closeToZero(vec.y)) console.log(`ph`);
+                    if (closeToZero(p1.y)) console.log(`ph`);
+                }
+                
+                let inc = spikeWidth;
+                let p1 = getPoint(inc);
+                for(let i = shift ? spikeWidth*0.4 : 0; i <= 100 + spikeWidth; i += inc) {
+                    const p2 = getPoint(fixPercentage(i / 100));
+                    if (p1 && p2) {
+                        // drawLine(p1, p2);
+                        if (closeToZero(p1.y) || closeToZero(p2.y)) console.log(`DAMN ${i}`);
+                        drawSpike(p1, p2);
+                    }
+                    p1 = p2;
+                }
+            }
+
+            let shift = false;
+            function draw() {
+                clear();
+                drawChainsaw(20, 20, 150, 70, 4, 2.5, shift);
+                drawChainsaw(180, 100, 90, 300, 4, 2.5, shift);
+                shift = !shift;
+            }
+
+            setInterval(draw, 50);
+
+            function closeToZero(x) {
+                if (x <  3) return true;
+                return false;
+            }
+
+
+            // const p1 = new Point(100, 100);
+            // const p2 = new Point(0, 100);
+
+            // console.log(Point.interpolate(p1, p2, .5));
+        
+
+        
+        </script>
+    </body>
+</html>
