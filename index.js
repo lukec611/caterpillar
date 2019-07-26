@@ -1,15 +1,11 @@
-const gameDiv = document.getElementById('game-screen');
-
-
-
-
-const screen_size = new Point(400, 800);
 
 class EvilBox {
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, gameDiv, screenSize) {
         this.p = new Point(x, y);
         this.width = width;
         this.height = height;
+        this.screenSize = screenSize;
+        this.gameDiv = gameDiv;
         this.init();
     } 
 
@@ -18,7 +14,7 @@ class EvilBox {
         this._e.className = 'evil-box';
         this._e.style.width = `${this.width}px`;
         this._e.style.height = `${this.height}px`;
-        gameDiv.appendChild(this._e);
+        this.gameDiv.appendChild(this._e);
         this.setPos(this.p);
         this.cs = new ChainSaw(0, 0, this.width, this.height);
         this._e.appendChild(this.cs._e);
@@ -37,7 +33,7 @@ class EvilBox {
     }
 
     offScreen() {
-        return this.p.y >= screen_size.y;
+        return this.p.y >= this.screenSize.y;
     }
 
     removeFromDom() {
@@ -47,9 +43,10 @@ class EvilBox {
 
 class Circle {
 
-    constructor(x = 0, y = 0, r = 20) {
+    constructor(x = 0, y = 0, r = 20, gameDiv) {
         this.p = new Point(x, y);
         this.r = r;
+        this.gameDiv = gameDiv;
         this.init();
     }
 
@@ -58,7 +55,7 @@ class Circle {
         this._element.style.width = `${this.r}px`;
         this._element.style.height = `${this.r}px`;
         this._element.className = 'caterpillar-body';
-        gameDiv.appendChild(this._element);
+        this.gameDiv.appendChild(this._element);
     }
 
     getElement() {
@@ -73,16 +70,17 @@ class Circle {
 }
 
 class Caterpillar {
-    constructor(elems = 7) {
+    constructor(elems = 7, gameDiv, screenSize) {
+        this.gameDiv = gameDiv;
+        this.screenSize = screenSize;
         this.elems = Array.from({ length: elems })
-            .map(() => new Circle());
-        const center = new Point();
+            .map(() => new Circle(undefined, undefined, undefined, this.gameDiv));
         this.init();
     }
 
     init() {
         const fixed_spacing = 20;
-        const midPoint = screen_size.copy().scale(0.5);
+        const midPoint = this.screenSize.copy().scale(0.5);
         let spacing_amount = 0;
         for(let x of this.elems) {
             x.setPos(midPoint.x, spacing_amount + midPoint.y);
@@ -105,60 +103,88 @@ class Caterpillar {
     }
 
     withinScreen(p) {
-        const box = gameDiv.getBoundingClientRect();
+        const box = this.gameDiv.getBoundingClientRect();
         return p.x >= 0 && p.x < box.width;
     }
 }
 
+function beginGame({
+    screenSize,
+    gameDiv,
+}) {
+    const screenSizePoint = new Point(screenSize.width, screenSize.height);
+    const c = new Caterpillar(10, gameDiv, screenSizePoint);
+    let boxes = [];
+    boxes.push(randomBox());
 
-const c = new Caterpillar(10);
-let boxes = [];
-boxes.push(randomBox());
-// const eb = randomBox();
-function randomBox() {
-    // get box with lowest y pos, subtract a random amount from that
-    // y pos, and put a block there, with a random height and width
-    const width = Rand.rng(50, screen_size.x - 50);
-    let xPos = Rand.rng(0, screen_size.x - width);
-    if (Math.random() < 0.5) {
-        xPos = screen_size.x - xPos - width;
-    }
-    const height = Rand.rng(10, 80);
-    let yPos = Math.min(boxes.reduce((p, c) => Math.min(c.p.y, p), 0), 0) || 0; // the smallest current box y
-    yPos -= height; // move up by height
-    yPos -= Rand.rng(200, height + 240); // move up by an additional random amount
-    return new EvilBox(xPos, yPos, width, height);
-}
+    const keys = new Map();
 
-
-const keys = new Map();
-function step() {
-    let scalar = 0;
-    if (keys.get('a')) {
-        scalar = -1;
-    } else if (keys.get('d')) {
-        scalar = 1;
-    }
-    c.move(scalar * 6);
-    boxes.forEach(b => b.step(4));
-    boxes = boxes.filter(b => {
-        if (b.offScreen()) {
-            b.removeFromDom();
-            return false;
+    function randomBox() {
+        // get box with lowest y pos, subtract a random amount from that
+        // y pos, and put a block there, with a random height and width
+        const width = Rand.rng(50, screenSize.width - 50);
+        let xPos = Rand.rng(0, screenSize.width - width);
+        if (Math.random() < 0.5) {
+            xPos = screenSize.width - xPos - width;
         }
-        return true;
+        const height = Rand.rng(10, 80);
+        let yPos = Math.min(boxes.reduce((p, c) => Math.min(c.p.y, p), 0), 0) || 0; // the smallest current box y
+        yPos -= height; // move up by height
+        yPos -= Rand.rng(200, height + 240); // move up by an additional random amount
+        return new EvilBox(xPos, yPos, width, height, gameDiv, screenSize);
+    }
+    
+    function step() {
+        let scalar = 0;
+        if (keys.get('a')) {
+            scalar = -1;
+        } else if (keys.get('d')) {
+            scalar = 1;
+        }
+        c.move(scalar * 6);
+        boxes.forEach(b => b.step(4));
+        boxes = boxes.filter(b => {
+            if (b.offScreen()) {
+                b.removeFromDom();
+                return false;
+            }
+            return true;
+        });
+        while(boxes.length < 20) boxes.push(randomBox());
+    }
+    
+    document.addEventListener('keydown', (e) => {
+        if ('ad'.includes(e.key)) keys.set(e.key, true);
     });
-    while(boxes.length < 20) boxes.push(randomBox());
+    document.addEventListener('keyup', (e) => {
+        if ('ad'.includes(e.key)) keys.set(e.key, false);
+    });
+
+    setInterval(step, 20);
 }
 
-setInterval(step, 20);
 
-document.addEventListener('keydown', (e) => {
-    if ('ad'.includes(e.key)) keys.set(e.key, true);
-});
-document.addEventListener('keyup', (e) => {
-    if ('ad'.includes(e.key)) keys.set(e.key, false);
-});
+function onLoad() {
+    const [width, height] = [window.innerWidth, window.innerHeight];
+    const screenSize = width < 400 ? {
+        width,
+        height,
+    } : {
+        width: 400,
+        height,
+    };
+    const padding = 10;
+    screenSize.width -= padding;
+    screenSize.height -= padding;
+    console.log('screen loaded', width, height);
+    const gameDiv = document.getElementById('game-screen');
+    gameDiv.style.width = `${screenSize.width}px`;
+    gameDiv.style.height = `${screenSize.height}px`;
 
+    beginGame({
+        screenSize,
+        gameDiv,
+    });
+}
 
-console.log('game start');
+document.body.onload = onLoad;

@@ -10,8 +10,7 @@ body {
 
 #game-screen {
     border: 2px dashed green;
-    width: 400px;
-    height: 800px;
+    box-sizing: border-box;
 }
 
 .caterpillar-body {

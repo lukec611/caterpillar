@@ -32,8 +32,8 @@ class ChainSaw {
 
     clearScreen() {
         this.ctx.beginPath();
-        this.ctx.rect(0, 0, this.w, this.h);
-        this.ctx.fillStyle = "white";
+        this.ctx.clearRect(0, 0, this.w, this.h)
+        this.ctx.fillStyle = "rgba(0,0,0,0)";
         this.ctx.fill();
     }
 
