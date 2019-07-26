@@ -163,7 +163,7 @@ function beginGame({
 
     let prev = undefined;;
 
-    document.addEventListener("mousemove", (e) => {
+    document.addEventListener("pointermove", (e) => {
         const [x, y] = [e.clientX, e.clientY];
         console.log(x, y);
 
