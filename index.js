@@ -91,8 +91,9 @@ class Caterpillar {
     move(speed) {
         const e = this.elems[0];
         const np = new Point(e.p.x + speed, e.p.y);
-        if (!this.withinScreen(np)) return;
-        e.setPos(np.x, np.y);
+        if (this.withinScreen(np)) {
+            e.setPos(np.x, np.y);
+        }
         for(let i = 1; i < this.elems.length; i++) {
             const ex = this.elems[i];
             const prev = this.elems[i-1];
@@ -159,6 +160,29 @@ function beginGame({
     document.addEventListener('keyup', (e) => {
         if ('ad'.includes(e.key)) keys.set(e.key, false);
     });
+
+    let prev = undefined;;
+
+    document.addEventListener("mousemove", (e) => {
+        const [x, y] = [e.clientX, e.clientY];
+        console.log(x, y);
+
+        if (prev) {
+            const diff = x - prev.x;
+            console.log(diff);
+            if (diff < 0) {
+                keys.set('a', true);
+                keys.set('d', false);
+            }
+            if (diff > 0) {
+                keys.set('d', true);
+                keys.set('a', false);
+            }
+        }
+        prev = { x, y };
+    });
+
+
 
     setInterval(step, 20);
 }
