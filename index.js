@@ -164,6 +164,7 @@ function beginGame({
     let prev = undefined;;
 
     document.addEventListener("pointermove", (e) => {
+        e.preventDefault();
         const [x, y] = [e.clientX, e.clientY];
         console.log(x, y);
 
